@@ -1,5 +1,5 @@
 import csv
-
+import os
 
 class saveFile():
     def __init__(self):
@@ -17,6 +17,10 @@ class saveFile():
         return self.full_fileName
 
     def create_header(self,column_names):
+        ind = 1        
+        while self.check_file():
+            self.full_fileName = self.filename + str(ind) + self.file_ext
+            ind = ind + 1
         self.data_expected = len(column_names)
         with open(self.full_fileName,'w',newline='') as logFile:
             logWriter = csv.writer(logFile)
@@ -26,6 +30,9 @@ class saveFile():
         with open(self.full_fileName,'a',newline='') as logFile:
             logWriter = csv.writer(logFile)
             logWriter.writerow(data)
+    
+    def check_file(self):
+        return os.path.isfile(self.full_fileName)
 
     def attach_plot(self):
         pass
