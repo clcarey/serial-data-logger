@@ -10,7 +10,7 @@ import sys
 from configWindow import configWindow
 from serialConnection import SerialConnection
 from fileManagement import saveFile
-from dataCollectThread import dataThread
+from dataManagementThread import dataThread
  
 class ComboBox(QComboBox):
     popupAboutToBeShown = pyqtSignal()
@@ -25,13 +25,19 @@ class MainWindow (QMainWindow):
     def __init__(self,configW):
         super().__init__()
         self.configW=configW
+        self.sf = saveFile()
+
         #TODO Add default values class variables
-        #self.initUI() #waits for signal to initiate the UI
+
 
     @pyqtSlot()
     def recieveConfig(self):
         [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis]=self.configW.get_config()
         self.sc = SerialConnection(self.serial_baud_rate)
+
+        self.sf.set_columnNames(self.data_title)
+        self.dataThread = dataThread(self.sc,self.sf,self.channel_num)
+        self.dataThread.new_dat.connect(self.plotData)
         self.initUI()
         self.show()
         
@@ -55,7 +61,7 @@ class MainWindow (QMainWindow):
         self.ser_write.textEdited.connect(self.serial_write)
         
         self.set_savefilename = QLabel("Save File Name")
-        self.savefilename = QLineEdit("filename")          #TODO: auto iterate filename to help with overwriting
+        self.savefilename = QLineEdit("filename")
         
         self.launch_button = QPushButton("Begin Data Collection")
         self.launch_button.setCheckable(True)
@@ -78,7 +84,6 @@ class MainWindow (QMainWindow):
         layout.addWidget(self.ser_write)
         layout.addWidget(self.set_savefilename)
         layout.addWidget(self.savefilename)
-        #layout.addWidget()
         layout.addWidget(self.launch_button)
         
         super_layout = QHBoxLayout()
@@ -98,35 +103,40 @@ class MainWindow (QMainWindow):
     
     def connect_Serial(self):
         self.sc.set_port(self.serial_select.currentText())
+        self.dataThread.attach_plot(self.testgraph,0,1)
+
         self.sc.connect()
+        self.dataThread.start()
+
     def disconnect_Serial(self):
+        self.dataThread.stopSerial()
         self.sc.disconnect()
         
     def serial_write(self):
         self.sc.send_char(self.ser_write.text())
         self.ser_write.clear()
         
+    
+    @pyqtSlot()
+    def plotData(self):
+        #for i,plots in enumerate(self.plots):
+        #    plots.plot(self.dataThread.storedDatX[i],self.dataThread.storedDatY[i])
+        self.testgraph.clear()
+        if len(self.dataThread.storedDatX[0])>self.dataThread.dataLen-1:
+            self.testgraph.plot(self.dataThread.storedDatX[0][0:self.dataThread.dataLen-1],self.dataThread.storedDatY[0][0:self.dataThread.dataLen-1])
+
+        else:
+            self.testgraph.plot(self.dataThread.storedDatX[0],self.dataThread.storedDatY[0])
+
     def data_Collection(self,checked):
-        time = [1,2,3,4,5,6,7]
-        yaxis = [2,4,6,7,7.5,8,8.25]
-        self.testgraph.plot(time,yaxis)
-        
         
         if checked:
             #create savefile with header
-            self.sf = saveFile()
             self.sf.set_filename(self.savefilename.text(),'.csv')
-            self.sf.create_header(self.data_title)
             #start data collection
-            self.dataThread = dataThread(self.sc,self.sf)
-            self.dataThread.start()
+            self.dataThread.set_Data(True)
             
         else:
             #When unclicked, safely stop thread
-            self.dataThread.stopstop()
-            self.dataThread.quit()
-
-        
-
-
-
+            self.dataThread.set_Data(False)
+            #self.dataThread.quit()

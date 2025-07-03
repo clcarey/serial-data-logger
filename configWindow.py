@@ -8,7 +8,7 @@ import sys
 
 
 class configWindow (QMainWindow):
-    readySignal=pyqtSignal()    
+    readySignal=pyqtSignal()
     def __init__(self):
         super().__init__()
         self.initUI()

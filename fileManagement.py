@@ -7,6 +7,8 @@ class saveFile():
         self.filename = "blank"
         self.file_ext = ".csv"
         self.full_fileName = self.filename + self.file_ext
+        self.save_active = False
+        self.column_names = []
         
     def set_filename(self,name,ext = ".csv"):
         self.filename = name
@@ -17,14 +19,14 @@ class saveFile():
         self.full_fileName = self.filename + self.file_ext
         return self.full_fileName
 
-    def create_header(self,column_names):
+    def create_header(self):
         ind = 1        
         while self.check_file():
             self.full_fileName = self.filename + str(ind) + self.file_ext
             ind = ind + 1
-        self.data_expected = len(column_names)
+        self.data_expected = len(self.column_names)
         writecolumn = [str("UTC")]
-        writecolumn.extend(column_names)
+        writecolumn.extend(self.column_names)
         with open(self.full_fileName,'w',newline='') as logFile:
             logWriter = csv.writer(logFile)
             logWriter.writerow(writecolumn)
@@ -38,6 +40,12 @@ class saveFile():
     
     def check_file(self):
         return os.path.isfile(self.full_fileName)
+
+    def set_active(self,new_value):
+        self.save_active = new_value
+    
+    def set_columnNames(self,new_value):
+        self.column_names = new_value
 
     def attach_plot(self):
         pass

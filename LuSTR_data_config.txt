@@ -1,0 +1,66 @@
+#Serial Baud Rate:
+115200
+
+#Number of data points:
+25
+
+#Data point 1
+time [ms]
+#Data point 2
+pin state []
+#Data point 3
+plate state []
+#Data point 4
+depth target [cm]
+
+#Data point 5
+pin position [mm]
+#Data point 6
+pin velocity [rev/s]
+#Data point 7
+pin torque [Nm]
+#Data point 8
+pin temp [C]
+#Data point 9
+pin current [A]
+#Data point 10
+pin voltage [V]
+
+#Data point 11
+plate position [mm]
+#Data point 12
+plate veloctiy [rev/s]
+#Data point 13
+plate torque [Nm]
+#Data point 14
+plate temp [C]
+#Data point 15
+plate current [A]
+#Data point 16
+plate voltage [V]
+
+#Data point 17
+vibe velocity [rev/s]
+#Data point 18
+vibe torque [Nm]
+#Data point 19
+vibe current [A]
+#Data point 20
+vibe voltage [V]
+
+#Data point 21
+estop []
+#Data point 22
+lim bottom []
+#Data point 23
+lim top []
+#Data point 24
+lim between []
+#Data point 25
+lim reverse []
+
+#Number of Plots:
+1
+#plot 1
+1
+2

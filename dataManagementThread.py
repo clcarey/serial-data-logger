@@ -11,11 +11,12 @@ import sys
 class dataThread(QThread):
     #running = False
     new_dat=pyqtSignal()
-    def __init__(self,serial_connection,file_save):
+    def __init__(self,serial_connection,file_save,channel_num):
         super().__init__()
         self.ser = serial_connection
         self.sf = file_save
         self.saving = False
+        self.expectedDat = channel_num
         
         #plotting stuff
         self.data = []
@@ -59,13 +60,17 @@ class dataThread(QThread):
             if self.ser.ser.in_waiting > 0:            
                 self.data=self.ser.ser.readline().decode()
                 self.data = self.data.split(',')
-                self.save_instance()
-                self.plot()
+                
+                if len(self.data) == self.expectedDat:
+                    self.save_instance()
+                    self.plot()
 
             #save data
-                if self.saving:
-                    self.sf.write_row(self.data)
-        
+                    if self.saving:
+                        self.sf.write_row(self.data)
+                else:
+                    print("Unexpected data:")
+                    print(self.data)
     def set_fileName(self,new_value0):
         self.sf = new_value
 
