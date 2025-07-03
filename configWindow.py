@@ -63,7 +63,7 @@ class configWindow (QMainWindow):
         self.plot_num = 0
         self.data_title = []
         self.plot_axis = []
-
+        self.dataSignalIndex = -1
         with open(file) as file:
             linelist = [line.rstrip() for line in file]
         linelist[:] = [x for x in linelist if x]
@@ -77,6 +77,8 @@ class configWindow (QMainWindow):
                 if x[1:5] == "plot":
                     self.plot_axis.append(linelist[i+1])
                     self.plot_num +=1
+                if x[1:5] == "Sign":
+                    self.dataSignalIndex = int(linelist[i+1])
     
     def openFileDialog(self):
         file_dialog = QFileDialog(self)
@@ -89,8 +91,9 @@ class configWindow (QMainWindow):
             self.read_config_file(selected_files[0])
             self.readySignal.emit()
             self.hide()
+            
     def get_config(self):
-        return [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis]
+        return [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis,self.dataSignalIndex]
 
     def launch_data(self):
         self.serial_baud_rate = int(self.serial_line.text())        

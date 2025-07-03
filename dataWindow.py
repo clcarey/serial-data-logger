@@ -32,12 +32,15 @@ class MainWindow (QMainWindow):
 
     @pyqtSlot()
     def recieveConfig(self):
-        [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis]=self.configW.get_config()
+        [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis,self.dataSignalIndex]=self.configW.get_config()
         self.sc = SerialConnection(self.serial_baud_rate)
 
         self.sf.set_columnNames(self.data_title)
         self.dataThread = dataThread(self.sc,self.sf,self.channel_num)
         self.dataThread.new_dat.connect(self.plotData)
+        if self.dataSignalIndex >= 0:
+            self.dataThread.attach_dataCheck(self.dataSignalIndex)
+        
         self.initUI()
         self.show()
         
@@ -62,6 +65,7 @@ class MainWindow (QMainWindow):
         
         self.set_savefilename = QLabel("Save File Name")
         self.savefilename = QLineEdit("filename")
+        self.savefilename.editingFinished.connect(self.set_savename)
         
         self.launch_button = QPushButton("Begin Data Collection")
         self.launch_button.setCheckable(True)
@@ -103,7 +107,7 @@ class MainWindow (QMainWindow):
     
     def connect_Serial(self):
         self.sc.set_port(self.serial_select.currentText())
-        self.dataThread.attach_plot(self.testgraph,0,1)
+        self.dataThread.attach_plot(0,1)
 
         self.sc.connect()
         self.dataThread.start()
@@ -128,6 +132,9 @@ class MainWindow (QMainWindow):
         else:
             self.testgraph.plot(self.dataThread.storedDatX[0],self.dataThread.storedDatY[0])
 
+    def set_savename(self):
+        self.sf.set_filename(self.savefilename.text(),'.csv')
+
     def data_Collection(self,checked):
         
         if checked:
@@ -139,4 +146,5 @@ class MainWindow (QMainWindow):
         else:
             #When unclicked, safely stop thread
             self.dataThread.set_Data(False)
+            self.sf.set_active(False)
             #self.dataThread.quit()

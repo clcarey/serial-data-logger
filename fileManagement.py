@@ -30,8 +30,11 @@ class saveFile():
         with open(self.full_fileName,'w',newline='') as logFile:
             logWriter = csv.writer(logFile)
             logWriter.writerow(writecolumn)
+        self.save_active = True
 
     def write_row(self, data):
+        if not self.save_active:
+            self.create_header()
         with open(self.full_fileName,'a',newline='') as logFile:
             logWriter = csv.writer(logFile)
             writedata = [str(time.time())]
@@ -47,5 +50,3 @@ class saveFile():
     def set_columnNames(self,new_value):
         self.column_names = new_value
 
-    def attach_plot(self):
-        pass
