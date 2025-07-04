@@ -13,6 +13,12 @@ class configWindow (QMainWindow):
         super().__init__()
         self.initUI()
         
+        self.serial_baud_rate = 9600
+        self.channel_num = 0
+        self.plot_num = 0
+        self.data_title = []
+        self.plot_axis = []
+        self.dataSignalIndex = -1
         
     def initUI(self):    
         self.setWindowTitle("Config")
@@ -59,27 +65,28 @@ class configWindow (QMainWindow):
         self.setCentralWidget(widget)
 
     def read_config_file(self,file):
-        self.channel_num = 0
-        self.plot_num = 0
-        self.data_title = []
-        self.plot_axis = []
-        self.dataSignalIndex = -1
-        with open(file) as file:
-            linelist = [line.rstrip() for line in file]
-        linelist[:] = [x for x in linelist if x]
-        for i,x in enumerate(linelist):
-            if x[0] == "#":
-                if x[1:5] == "Seri":
-                    self.serial_baud_rate = int(linelist[i+1])
-                if x[1:5] == "Data":
-                    self.data_title.append(linelist[i+1])
-                    self.channel_num +=1
-                if x[1:5] == "plot":
-                    self.plot_axis.append(linelist[i+1])
-                    self.plot_num +=1
-                if x[1:5] == "Sign":
-                    self.dataSignalIndex = int(linelist[i+1])
-    
+
+        try:
+            with open(file) as file:
+                linelist = [line.rstrip() for line in file]
+            linelist[:] = [x for x in linelist if x]
+        
+            for i,x in enumerate(linelist):
+                if x[0] == "#":
+                    if x[1:5] == "Seri":
+                        self.serial_baud_rate = int(linelist[i+1])
+                    if x[1:5] == "Data":
+                        self.data_title.append(linelist[i+1])
+                        self.channel_num +=1
+                    if x[1:5] == "Plot":
+                        self.plot_axis.append(int(linelist[i+1]))
+                        self.plot_axis.append(int(linelist[i+2]))
+                        self.plot_num +=1
+                    if x[1:5] == "Sign":
+                        self.dataSignalIndex = int(linelist[i+1])
+        except:
+            print("Bad Config Try Again")
+
     def openFileDialog(self):
         file_dialog = QFileDialog(self)
         file_dialog.setWindowTitle("Open File")

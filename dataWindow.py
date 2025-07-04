@@ -71,11 +71,11 @@ class MainWindow (QMainWindow):
         self.launch_button.setCheckable(True)
         self.launch_button.clicked.connect(self.data_Collection)
 
-        
-        self.testgraph = pg.PlotWidget()
-        self.testgraph.setBackground("w")
-        self.testgraph.resize(400,300)
-        
+
+        self.plots_list = []
+        for i in range (self.plot_num):
+            self.plots_list.append(pg.PlotWidget())
+            self.plots_list[i].setBackground("w")
         
         
         #create layout for Config dialog
@@ -92,7 +92,8 @@ class MainWindow (QMainWindow):
         
         super_layout = QHBoxLayout()
         super_layout.addLayout(layout)
-        super_layout.addWidget(self.testgraph)
+        for plot in self.plots_list:
+            super_layout.addWidget(plot)
         
         
         widget = QWidget()
@@ -107,7 +108,9 @@ class MainWindow (QMainWindow):
     
     def connect_Serial(self):
         self.sc.set_port(self.serial_select.currentText())
-        self.dataThread.attach_plot(0,1)
+        for i,plots in enumerate(self.plots_list):
+            self.dataThread.attach_plot(self.plot_axis[2*i],self.plot_axis[2*i+1])
+            
 
         self.sc.connect()
         self.dataThread.start()
@@ -123,14 +126,13 @@ class MainWindow (QMainWindow):
     
     @pyqtSlot()
     def plotData(self):
-        #for i,plots in enumerate(self.plots):
-        #    plots.plot(self.dataThread.storedDatX[i],self.dataThread.storedDatY[i])
-        self.testgraph.clear()
-        if len(self.dataThread.storedDatX[0])>self.dataThread.dataLen-1:
-            self.testgraph.plot(self.dataThread.storedDatX[0][0:self.dataThread.dataLen-1],self.dataThread.storedDatY[0][0:self.dataThread.dataLen-1])
-
-        else:
-            self.testgraph.plot(self.dataThread.storedDatX[0],self.dataThread.storedDatY[0])
+        for i,plots in enumerate(self.plots_list):
+            #plots.plot(self.dataThread.storedDatX[i],self.dataThread.storedDatY[i])
+            plots.clear()
+            if len(self.dataThread.storedDatX[0])>self.dataThread.dataLen-1:
+                plots.plot(self.dataThread.storedDatX[i][0:self.dataThread.dataLen-1],self.dataThread.storedDatY[i][0:self.dataThread.dataLen-1])
+            else:
+                plots.plot(self.dataThread.storedDatX[i],self.dataThread.storedDatY[i])
 
     def set_savename(self):
         self.sf.set_filename(self.savefilename.text(),'.csv')

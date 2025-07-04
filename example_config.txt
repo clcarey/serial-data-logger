@@ -1,0 +1,30 @@
+Lines beginning with a '#' will prompt the code to read the next 4 characters to figure out parameter
+then the next line or two will be saved as the value
+
+Seri: 1 line: set the Baud rate
+Data: 1 line: Appends Data headers and increments expected data length
+Plot: 2 line: takes next line as x axis and the next line as y axis and increments plot number
+sign: 1 line: Turns on data saving from data sign, next line is set to the data index that will be watched for changes
+
+#Serial Baud Rate:
+9600
+
+#Data point 1
+time [ms]
+#Data point 2
+Position [cm]
+#Data point 3
+Force [kN]
+
+
+#Signal Data Start Index
+1
+
+#Plot 1
+0
+1
+
+#Plot 2
+0
+3
+

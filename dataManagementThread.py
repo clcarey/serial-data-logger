@@ -63,6 +63,7 @@ class dataThread(QThread):
     def dataCheck(self):
         if self.lastCheck != self.data[self.dataCheckInd]:
             self.saving = True
+        #print(self.data)
         self.lastCheck = self.data[self.dataCheckInd]
 
     def run(self):
