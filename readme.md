@@ -30,7 +30,7 @@ Install Python
 
 Install prerequisite libraries:
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ### Configuration File
