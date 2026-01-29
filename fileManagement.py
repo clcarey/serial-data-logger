@@ -1,6 +1,8 @@
 import csv
 import os
 import time
+import os
+import sys
 
 class saveFile():
     def __init__(self):
@@ -13,7 +15,7 @@ class saveFile():
     def set_filename(self,name,ext = ".csv"):
         self.filename = name
         self.file_ext = ext
-        self.full_fileName = self.filename + self.file_ext
+        self.full_fileName = os.path.dirname(os.path.abspath(sys.argv[0])) + "/"+  self.filename + self.file_ext
 
     def get_filename(self):
         self.full_fileName = self.filename + self.file_ext

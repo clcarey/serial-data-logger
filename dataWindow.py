@@ -32,14 +32,19 @@ class MainWindow (QMainWindow):
 
     @pyqtSlot()
     def recieveConfig(self):
-        [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis,self.dataSignalIndex]=self.configW.get_config()
-        self.sc = SerialConnection(self.serial_baud_rate)
+        self.config=self.configW.get_config()
 
-        self.sf.set_columnNames(self.data_title)
-        self.dataThread = dataThread(self.sc,self.sf,self.channel_num)
+        self.sc = SerialConnection(self.config["serial_baud_rate"])
+
+        col_names = []
+        for n in self.config["data"]:
+            col_names.append(n)
+            if self.config["data"][n]["parse"]["active"]:
+                col_names.append(n + "- parsed")
+        self.sf.set_columnNames(col_names)
+
+        self.dataThread = dataThread(self.sc,self.sf,self.config["data"])
         self.dataThread.new_dat.connect(self.plotData)
-        if self.dataSignalIndex >= 0:
-            self.dataThread.attach_dataCheck(self.dataSignalIndex)
         
         self.initUI()
         self.show()
@@ -64,7 +69,7 @@ class MainWindow (QMainWindow):
         self.ser_write.textEdited.connect(self.serial_write)
         
         self.set_savefilename = QLabel("Save File Name")
-        self.savefilename = QLineEdit("filename")
+        self.savefilename = QLineEdit(self.config["filename"])
         self.savefilename.editingFinished.connect(self.set_savename)
         
         self.launch_button = QPushButton("Begin Data Collection")
@@ -73,7 +78,7 @@ class MainWindow (QMainWindow):
 
 
         self.plots_list = []
-        for i in range (self.plot_num):
+        for i in range (self.config["plot_num"]):
             self.plots_list.append(pg.PlotWidget())
             self.plots_list[i].setBackground("w")
         
@@ -126,13 +131,11 @@ class MainWindow (QMainWindow):
     
     @pyqtSlot()
     def plotData(self):
-        for i,plots in enumerate(self.plots_list):
-            #plots.plot(self.dataThread.storedDatX[i],self.dataThread.storedDatY[i])
-            plots.clear()
-            if len(self.dataThread.storedDatX[0])>self.dataThread.dataLen-1:
-                plots.plot(self.dataThread.storedDatX[i][0:self.dataThread.dataLen-1],self.dataThread.storedDatY[i][0:self.dataThread.dataLen-1])
-            else:
-                plots.plot(self.dataThread.storedDatX[i],self.dataThread.storedDatY[i])
+        for i,plot in self.plots_list:plot.clear() 
+        for channel in self.dataThread.data_channels:
+            if channel["plotting"]["active"]:
+                self.plots_list[channel["plotting"]["plot num"]].plot(channel.x_ref,channel.buffer,label = channel["plotting"]["name"])
+ 
 
     def set_savename(self):
         self.sf.set_filename(self.savefilename.text(),'.csv')

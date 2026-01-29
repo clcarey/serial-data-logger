@@ -1,4 +1,5 @@
 from enum import Enum
+import time
 
 class Errors(Enum):
     UNEXPECTED_VALUE = 1 
@@ -51,10 +52,11 @@ class DataChannel():
         self.last_read = None
         self.parsed_read = None
         self.buffer=[]
+        self.x_ref = []
         self._error = 0b0
 
 
-    def new(self,value):
+    def new(self,value,x_new=time.time()):
         self.last_read = value
         temp = self.last_read
         if self.config["parse"]["active"]: 
@@ -62,14 +64,17 @@ class DataChannel():
             temp = self.parsed_read
         if self.config["range"]["active"]: self.check_range()
 
-        if self.config["plotting"]["active"]:
+        if not self._error and self.config["plotting"]["active"]:
+            self.x_ref.append(x_new)
             self.buffer.append(temp)
             if len(self.buffer)>self.config["plotting"]["buffersize"]:
+                self.x_ref.pop(0)
                 self.buffer.pop(0)
+            
         self.check_error()
     
     #%% Parsing
-    #TODO: integrate a more better parsing library
+    #TODO: integrate a more robust parsing library
     def _parse(self):
         match self.config["parse"]["type"]:
             case ParseType.SINGLE_START.value: self.parsed_read = self.single_start_parse(self.last_read)

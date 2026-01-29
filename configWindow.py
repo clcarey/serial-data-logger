@@ -5,20 +5,21 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 import sys
-
+import json
 
 class configWindow (QMainWindow):
     readySignal=pyqtSignal()
     def __init__(self):
         super().__init__()
         self.initUI()
-        
-        self.serial_baud_rate = 9600
-        self.channel_num = 0
-        self.plot_num = 0
-        self.data_title = []
-        self.plot_axis = []
-        self.dataSignalIndex = -1
+
+        self.config = {
+            "serial_baud_rate" : 9600,
+            "channel_num" : 0,
+            "plot_num" : 0,
+            "data" : {}
+            }
+        self.config_flag = False
         
     def initUI(self):    
         self.setWindowTitle("Config")
@@ -41,8 +42,9 @@ class configWindow (QMainWindow):
         self.graph_axis_label = QLabel("Enter graph axis:")
         self.graph_axis_line = QLineEdit("xaxis1,yaxis1,xaxis2,yetc")
 
-        self.launch_button = QPushButton("Launch Data collection")
+        self.launch_button = QPushButton("Manual entry under dev use file")
         self.launch_button.clicked.connect(self.launch_data)
+        self.launch_button.setEnabled(False)
         
         #create layout for Config dialog
         layout = QVBoxLayout()
@@ -65,25 +67,10 @@ class configWindow (QMainWindow):
         self.setCentralWidget(widget)
 
     def read_config_file(self,file):
-
         try:
-            with open(file) as file:
-                linelist = [line.rstrip() for line in file]
-            linelist[:] = [x for x in linelist if x]
-        
-            for i,x in enumerate(linelist):
-                if x[0] == "#":
-                    if x[1:5] == "Seri":
-                        self.serial_baud_rate = int(linelist[i+1])
-                    if x[1:5] == "Data":
-                        self.data_title.append(linelist[i+1])
-                        self.channel_num +=1
-                    if x[1:5] == "Plot":
-                        self.plot_axis.append(int(linelist[i+1]))
-                        self.plot_axis.append(int(linelist[i+2]))
-                        self.plot_num +=1
-                    if x[1:5] == "Sign":
-                        self.dataSignalIndex = int(linelist[i+1])
+            with open(file) as json_file:
+                self.config = json.load(json_file)
+            self.config_flag = True
         except:
             print("Bad Config Try Again")
 
@@ -96,11 +83,13 @@ class configWindow (QMainWindow):
         if file_dialog.exec():
             selected_files = file_dialog.selectedFiles()
             self.read_config_file(selected_files[0])
+            
+        if self.config_flag:
             self.readySignal.emit()
             self.hide()
             
     def get_config(self):
-        return [self.serial_baud_rate,self.channel_num,self.data_title,self.plot_num,self.plot_axis,self.dataSignalIndex]
+        return self.config
 
     def launch_data(self):
         self.serial_baud_rate = int(self.serial_line.text())        
