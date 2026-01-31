@@ -57,7 +57,7 @@ class dataThread(QThread):
                 if len(self.data) == self.expectedDat:
                     self.save_instance()
                     self.plot()
-
+            
             #save data
                     if self.saving:
                         self.sf.write_row(self.data)

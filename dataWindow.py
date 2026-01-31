@@ -113,8 +113,8 @@ class MainWindow (QMainWindow):
     
     def connect_Serial(self):
         self.sc.set_port(self.serial_select.currentText())
-        for i,plots in enumerate(self.plots_list):
-            self.dataThread.attach_plot(self.plot_axis[2*i],self.plot_axis[2*i+1])
+        #for i,plots in enumerate(self.plots_list):
+        #    self.dataThread.attach_plot(self.plot_axis[2*i],self.plot_axis[2*i+1])
             
 
         self.sc.connect()
@@ -131,10 +131,11 @@ class MainWindow (QMainWindow):
     
     @pyqtSlot()
     def plotData(self):
-        for i,plot in self.plots_list:plot.clear() 
+        for plot in self.plots_list:plot.clear() 
         for channel in self.dataThread.data_channels:
-            if channel["plotting"]["active"]:
-                self.plots_list[channel["plotting"]["plot num"]].plot(channel.x_ref,channel.buffer,label = channel["plotting"]["name"])
+            if channel.config["plotting"]["active"]:
+                #print(channel.buffer)
+                self.plots_list[channel.config["plotting"]["plot num"]-1].plot(channel.x_ref,channel.buffer,label = channel.config["plotting"]["name"])
  
 
     def set_savename(self):

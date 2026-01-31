@@ -56,17 +56,20 @@ class DataChannel():
         self._error = 0b0
 
 
-    def new(self,value,x_new=time.time()):
+    def new(self,value,x_new= None,x_start = time.time()):
+        
+        if x_new is None:x_new = time.time() - x_start
         self.last_read = value
         temp = self.last_read
         if self.config["parse"]["active"]: 
+            self.last_read=self.last_read.rstrip("\\rn")
             self._parse()
             temp = self.parsed_read
         if self.config["range"]["active"]: self.check_range()
 
         if not self._error and self.config["plotting"]["active"]:
             self.x_ref.append(x_new)
-            self.buffer.append(temp)
+            self.buffer.append(float(temp))
             if len(self.buffer)>self.config["plotting"]["buffersize"]:
                 self.x_ref.pop(0)
                 self.buffer.pop(0)
@@ -89,6 +92,7 @@ class DataChannel():
                 self._error |= Errors.BAD_PARSE.value
 
     def single_split_parse(self,value):
+        #TODO: this is a temp solution to a specific issue with test dataset issue fix later
         try:
             temp = value.split(self.config["parse"]["start"])
             parsed_value = temp[len(temp)-1]
