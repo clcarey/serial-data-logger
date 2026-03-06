@@ -34,27 +34,41 @@ pip install -r requirements.txt
 ```
 
 ### Configuration File
-The code allows for a configuration file to be used to streamline data collection. The code will read a .txt file and identify serial baud rate, data titles, and plot axises from lines beginning with '#' followed by a four character identifier. The line after is read as the value (or next two lines for plot). Anything outside of this will be dismissed as a comment.
-Codes:
+The code allows for a configuration file to be used to streamline data collection. The code will read a .json file and identify serial baud rate, data titles, and plot axises
+The file "gui_config_helper.py" is a terminal based script that will generate the appropriate file, or alternatively the format should look as follows:
 ```
-#Seri - Serial Baud rate
-#Data - Data Title
-#Plot - Add Plot with axises
-```
-For example the following snippet will take a serial communicication containing "[timevalue],[position value]" and plot position with respect to time in 1 plot:
-```
-This is a comment
-#Serial Baud rate:
-9600
-#Data channel 1:
-Time (ms)
-#Data channel 2:
-Position (m)
-
-#Plot
-0
-1
+{
+    "serial_baud_rate": 9600,
+    "channel_num": 2,
+    "plot_num": 1,
+    "filename":"filename",
+    "data": {
+        "Channel 1": {
+            "plotting": {
+                "active": false,
+                "name": null,
+                "plot num": null,
+                "color": "r",
+                "linestyle": "",
+                "buffersize": null
+            },
+            "range": {
+                "active": false,
+                "low": null,
+                "high": null
+            },
+            "parse": {
+                "active": false,
+                "type": null,
+                "start": null,
+                "stop": null
+            }
+        },
+        "Channel 2": {...}
+    }
+}
 ```
 
 ## Example
 Included in the example folder is a basic prebuilt microcontroller script that demonstrates the serial communication with some basic data. 
+(Example is not yet updated for lastest release)
