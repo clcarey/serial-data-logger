@@ -135,8 +135,11 @@ class MainWindow (QMainWindow):
         for channel in self.dataThread.data_channels:
             if channel.config["plotting"]["active"]:
                 #print(channel.buffer)
-                self.plots_list[channel.config["plotting"]["plot num"]-1].plot(channel.x_ref,channel.buffer,label = channel.config["plotting"]["name"])
- 
+                try:
+                    self.plots_list[channel.config["plotting"]["plot num"]-1].plot(channel.x_ref,channel.buffer,label = channel.config["plotting"]["name"])
+                except:
+                    channel.clear_buffer()
+                    print("Plotting error clearing buffer")
 
     def set_savename(self):
         self.sf.set_filename(self.savefilename.text(),'.csv')

@@ -1,0 +1,136 @@
+import json
+
+def verify_int_input(prompt_str):
+    v_flag = False
+    while not v_flag:
+        temp = input(prompt_str)
+        try:
+            temp = int(temp)
+            v_flag = True
+        except:
+            print("Must be integer")        
+
+    print(">>"+str(temp))
+    return temp
+
+def verify_float_input(prompt_str):
+    v_flag = False
+    while not v_flag:
+        temp = input(prompt_str)
+        try:
+            temp = float(temp)
+            v_flag = True
+        except:
+            print("Must be convertable to float")        
+
+    print(">>"+str(temp))
+    return temp
+
+def verify_plot_input(plot_num):
+    v_flag = False
+    while not v_flag:
+        temp = input("Which plot 1-" +str(plot_num)+":")
+        try:
+            temp = int(temp)
+        except:
+            print("Must be integer")
+        if temp > plot_num: print("Out of range")
+        else: v_flag = True
+
+    print(">>"+str(temp))
+    return temp
+
+
+filename = input("config filename: ") + ".json"
+print(">>"+filename)
+
+savefilename = input("save filename: ")
+print(">>"+savefilename + ".csv")
+
+config_dict = {}
+
+serial_baud_rate = verify_int_input("Serial Baud Rate: ")
+config_dict["serial_baud_rate"] = serial_baud_rate
+      
+channel_num = verify_int_input("Number of Data Channels: ")
+config_dict["channel_num"] = channel_num
+
+plot_num = verify_int_input("Number of Plots: ")
+config_dict["plot_num"] = plot_num
+
+config_dict["savefile"] = savefilename
+
+
+config_dict["data"] = {}
+print(config_dict)
+
+
+default_plot = {
+            "active": False,
+            "name" : None,
+            "plot num" : None,
+            "color" : "r",
+            "linestyle" : "",
+            "buffersize": None
+}
+
+default_range = {
+            "active": False,
+            "low" : None,
+            "high" : None
+
+}
+
+default_parse = {
+            "active":False,
+            "type": None,
+            "start": None,
+            "stop": None
+
+}
+
+
+for i in range(channel_num):
+    channel_name = input("Channel "+str(i)+" Name: ")
+    config_dict["data"][channel_name]={}
+    plotting = input("Plot? Y/n: ")
+    config_dict["data"][channel_name]["plotting"] = dict(default_plot)
+    if plotting == "Y":
+        config_dict["data"][channel_name]["plotting"]["active"]= True
+        
+        legend_name = input("name for legend: ")
+        config_dict["data"][channel_name]["plotting"]["name"]= legend_name
+
+        buffer_size = verify_int_input("Buffer Size: ")
+        config_dict["data"][channel_name]["plotting"]["buffersize"]=buffer_size
+        
+        plot = verify_plot_input(plot_num)
+        config_dict["data"][channel_name]["plotting"]["plot num"] = plot
+
+    range_check = input("Check Range? Y/n: ")
+    config_dict["data"][channel_name]["range"] = dict(default_range)
+    if range_check == "Y":
+        config_dict["data"][channel_name]["range"]["active"] = True
+        
+        range_low = verify_float_input("Low Range Limit: ")
+        config_dict["data"][channel_name]["range"]["low"] = range_low
+
+        range_high = verify_float_input("High Range Limit: ")
+        config_dict["data"][channel_name]["range"]["high"] = range_high
+
+    
+    parse = input("Parse Channel? Y/n: ")
+    config_dict["data"][channel_name]["parse"] = dict(default_parse)
+    if parse == "Y":
+        config_dict["data"][channel_name]["parse"]["active"] = True
+        config_dict["data"][channel_name]["parse"]["type"] = 0     
+        print("Activating Scale Parse (+/- x.xx kg>>+/-x.xx)")
+        print("If other desired get chuck to implement")
+        
+
+with open(filename,"w") as json_file:
+    json.dump(config_dict,json_file,indent=4)
+
+
+
+

@@ -9,12 +9,12 @@ class Errors(Enum):
     BAD_RANGE = 16
 
 class ParseType(Enum):
-    SINGLE_START = 0
-    SINGLE_END = 1
-    SINGLE_SPLIT = 2
-    MULTI_START = 3
-    MULTI_END = 4
-    MULTI_SPLIT = 5
+    SCALE_PARSE = 0
+    PARSE_1 = 1
+    PARSE_2 = 2
+    PARSE_3 = 3
+    PARSE_4 = 4
+    PARSE_5 = 5
 
 default_config = { 
         "plotting": {
@@ -39,7 +39,33 @@ default_config = {
 
 
 class DataChannel():
-    
+    """
+    A class for the storage and management of Data Streams in data collection systems.
+
+    Attributes:
+        config (dict): Configuration of Data channel
+            plotting (dict):
+                active (bool): Plotting occuring
+                name (str): Name associated with data for legends
+                plot num (int): indicator of plot to associate data with
+                buffersize (int): number of points to store and plot
+            range (dict):
+                active (bool): Check data is in range
+                low (float): Low Reference
+                high (float): High Reference
+            parse (dict):
+                active (bool): Parse input str typically for plotting
+                type (int): select between parse types
+        last_read (str): last added data point
+        parsed_read (str): (if active) parse of last_read
+        buffer (arr): stored array of specified length of reads
+        x_ref (arr): mirror array to buffer containing elapsed time by default or an additional unit
+        
+    Methods:
+        channel_from_dict: create a new instance from a configuration dictionary
+        new: Add a new data point
+
+    """
     @classmethod
     def channel_from_dict(cls,config_dict):
         obj = cls()
@@ -61,7 +87,8 @@ class DataChannel():
         if x_new is None:x_new = time.time() - x_start
         self.last_read = value
         temp = self.last_read
-        if self.config["parse"]["active"]: 
+        if self.config["parse"]["active"]:
+            #This will remove any r and n
             self.last_read=self.last_read.rstrip("\\rn")
             self._parse()
             temp = self.parsed_read
@@ -79,55 +106,57 @@ class DataChannel():
     #%% Parsing
     #TODO: integrate a more robust parsing library
     def _parse(self):
+        self.clear_error(Errors.BAD_PARSE)
         match self.config["parse"]["type"]:
-            case ParseType.SINGLE_START.value: self.parsed_read = self.single_start_parse(self.last_read)
-            case ParseType.SINGLE_END.value: self.parsed_read = self.single_end_parse(self.last_read)
-            case ParseType.SINGLE_SPLIT.value: self.parsed_read = self.single_split_parse(self.last_read)
-            case ParseType.MULTI_START.value: self.parsed_read = self.multi_start_parse(self.last_read)
-            case ParseType.MULTI_END.value: self.parsed_read = self.multi_end_parse(self.last_read)
-            case ParseType.MULTI_SPLIT.value: self.parsed_read = self.multi_split_parse(self.last_read)
+            case ParseType.SCALE_PARSE.value: self.parsed_read = self.parse0(self.last_read)
+            case ParseType.PARSE_1.value: self.parsed_read = self.parse1(self.last_read)
+            case ParseType.PARSE_2.value: self.parsed_read = self.parse2(self.last_read)
+            case ParseType.PARSE_3.value: self.parsed_read = self.parse3(self.last_read)
+            case ParseType.PARSE_4.value: self.parsed_read = self.parse4(self.last_read)
+            case ParseType.PARSE_5.value: self.parsed_read = self.parse5(self.last_read)
             case _:
                 print("default case reached") 
                 self.parsed_read = self.last_read
                 self._error |= Errors.BAD_PARSE.value
 
-    def single_split_parse(self,value):
-        #TODO: this is a temp solution to a specific issue with test dataset issue fix later
+    def parse0(self,value):
+        #parse for scales: expects data to be of the format "+/- XXXX kg"
         try:
-            temp = value.split(self.config["parse"]["start"])
-            parsed_value = temp[len(temp)-1]
+            parsed_value = value.replace(" ","")
         except:
             self._error |= Errors.BAD_PARSE.value
             return value
         try:
-            temp = parsed_value.split(self.config["parse"]["stop"])
+            temp = parsed_value.split("k")
+            if len(temp) == 1: raise Exception("no starting parse found")
             parsed_value = temp[0]
         except:
             self._error |= Errors.BAD_PARSE.value
-
         return parsed_value
     
-    def single_start_parse(self,value):
+    def parse1(self,value):
         print("Parser not yet integrated")
         return value
 
-    def single_stop_parse(self,value):
+    def parse2(self,value):
         print("Parser not yet integrated")
         return value
 
-    def multi_start_parse(self,value):
+    def parse3(self,value):
         print("Parser not yet integrated")
         return value
 
-    def multi_stop_parse(self,value):
+    def parse4(self,value):
         print("Parser not yet integrated")
         return value
 
-    def multi_split_parse(self,value):
+    def parse5(self,value):
+
         print("Parser not yet integrated")
         return value    
 
     def check_range(self):
+        self.clear_error(Errors.BAD_RANGE.value)  
         try:
             if self.config["parse"]["active"]:
                 if float(self.parsed_read) < self.config["range"]["low"]: self._error |= Errors.RANGE_ERROR_LOW.value
@@ -146,8 +175,13 @@ class DataChannel():
                         print(Errors(2**(len(error_code)-(i+1))).name)
                         #raise(Errors(n))
 
-    def clear_error(self):
-        self._error = 0b00
+    def clear_error(self,bit = None):
+        if bit == None:
+            self._error = 0b00
+        elif isinstance(bit,Errors):
+            temp = 0b11111
+            temp ^= bit.value
+            self._error &= temp
 
     @property
     def range(self):
@@ -189,7 +223,9 @@ class DataChannel():
         self.config["parse"]["start"] = None
         self.config["parse"]["stop"] = None
 
-
+    def clear_buffer(self):
+        self.buffer = []
+        self.x_ref = []
 """
         def new(self,value):
             self.last_read = value
