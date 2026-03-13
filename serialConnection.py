@@ -8,11 +8,11 @@ class SerialConnection():
         self.port_select = ""        
         self.ser = None
 
-    def connect(self):
+    def connect(self,**kwargs):
         try:
             # Attempt to establish the serial connection
             self.serial_port = self.port_select #reads serial port selected from dropdown select
-            self.ser = serial.Serial(self.serial_port, self.serial_baudrate, timeout = 1)
+            self.ser = serial.Serial(self.serial_port, self.serial_baudrate, timeout = 1,**kwargs)
             print("Serial connection established.")
             self.ser.flush()
         except serial.SerialException as e:

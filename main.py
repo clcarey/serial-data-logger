@@ -9,7 +9,7 @@ import sys
 from configWindow import configWindow
 from serialConnection import SerialConnection
 from dataWindow import MainWindow
-
+from wakepy import keep
 
 
 app = QApplication(sys.argv)
@@ -19,8 +19,7 @@ dataWind = MainWindow(configWind)
 
 configWind.readySignal.connect(dataWind.recieveConfig)
 
-
-
-#dataWind.show()
 configWind.show()
-app.exec_()
+with keep.presenting():
+#dataWind.show()
+    app.exec_()

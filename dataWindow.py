@@ -69,7 +69,7 @@ class MainWindow (QMainWindow):
         self.ser_write.textEdited.connect(self.serial_write)
         
         self.set_savefilename = QLabel("Save File Name")
-        self.savefilename = QLineEdit(self.config["filename"])
+        self.savefilename = QLineEdit(self.config["savefile"])
         self.savefilename.editingFinished.connect(self.set_savename)
         
         self.launch_button = QPushButton("Begin Data Collection")
@@ -117,7 +117,7 @@ class MainWindow (QMainWindow):
         #    self.dataThread.attach_plot(self.plot_axis[2*i],self.plot_axis[2*i+1])
             
 
-        self.sc.connect()
+        self.sc.connect(parity=serial.PARITY_ODD,bytesize = serial.SEVENBITS)
         self.dataThread.start()
 
     def disconnect_Serial(self):

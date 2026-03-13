@@ -10,11 +10,13 @@ class Errors(Enum):
 
 class ParseType(Enum):
     SCALE_PARSE = 0
-    PARSE_1 = 1
+    STRIP_SLASHN = 1
     PARSE_2 = 2
     PARSE_3 = 3
     PARSE_4 = 4
     PARSE_5 = 5
+
+reasonable_buffersize = 3600
 
 default_config = { 
         "plotting": {
@@ -23,6 +25,7 @@ default_config = {
             "color" : "",
             "linestyle" : "",
             "buffersize": 50,
+            "displaytime": 3600 #1 hr
             },
         "range" : {
             "active": False,
@@ -49,6 +52,7 @@ class DataChannel():
                 name (str): Name associated with data for legends
                 plot num (int): indicator of plot to associate data with
                 buffersize (int): number of points to store and plot
+                displaytime (int): number of seconds of time to be displayed
             range (dict):
                 active (bool): Check data is in range
                 low (float): Low Reference
@@ -77,6 +81,7 @@ class DataChannel():
     def _init(self):
         self.last_read = None
         self.parsed_read = None
+        self.buffer_marker = 0
         self.buffer=[]
         self.x_ref = []
         self._error = 0b0
@@ -97,10 +102,24 @@ class DataChannel():
         if not self._error and self.config["plotting"]["active"]:
             self.x_ref.append(x_new)
             self.buffer.append(float(temp))
-            if len(self.buffer)>self.config["plotting"]["buffersize"]:
-                self.x_ref.pop(0)
-                self.buffer.pop(0)
+            leng = len(self.buffer)
+            global reasonable_buffersize
+    
+            if leng > self.config["plotting"]["buffersize"]+1:
+                time_ref = self.config["plotting"]["displaytime"]/(reasonable_buffersize-self.config["plotting"]["buffersize"])
+
+                if self.x_ref[self.buffer_marker+1] > self.x_ref[self.buffer_marker]+time_ref:
+                    self.buffer_marker += 1        
+                    if leng > reasonable_buffersize:
+                        self.x_ref.pop(0)
+                        self.buffer.pop(0)
+                        self.buffer_marker = self.buffer_marker - 1
+                
+                else:
+                    self.x_ref.pop(self.buffer_marker+1)
+                    self.buffer.pop(self.buffer_marker+1)
             
+
         self.check_error()
     
     #%% Parsing
@@ -109,7 +128,7 @@ class DataChannel():
         self.clear_error(Errors.BAD_PARSE)
         match self.config["parse"]["type"]:
             case ParseType.SCALE_PARSE.value: self.parsed_read = self.parse0(self.last_read)
-            case ParseType.PARSE_1.value: self.parsed_read = self.parse1(self.last_read)
+            case ParseType.STRIP_SLASHN.value: self.parsed_read = self.parse1(self.last_read)
             case ParseType.PARSE_2.value: self.parsed_read = self.parse2(self.last_read)
             case ParseType.PARSE_3.value: self.parsed_read = self.parse3(self.last_read)
             case ParseType.PARSE_4.value: self.parsed_read = self.parse4(self.last_read)
@@ -129,13 +148,12 @@ class DataChannel():
         try:
             temp = parsed_value.split("k")
             if len(temp) == 1: raise Exception("no starting parse found")
-            parsed_value = temp[0]
+            parsed_value = float(temp[0])
         except:
             self._error |= Errors.BAD_PARSE.value
         return parsed_value
     
     def parse1(self,value):
-        print("Parser not yet integrated")
         return value
 
     def parse2(self,value):
@@ -226,6 +244,7 @@ class DataChannel():
     def clear_buffer(self):
         self.buffer = []
         self.x_ref = []
+        self.buffer_marker = 0
 """
         def new(self,value):
             self.last_read = value

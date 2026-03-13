@@ -46,12 +46,15 @@ class dataThread(QThread):
 
     def run(self):
         self.ser.ser.reset_input_buffer()
+        self.ser.ser.readline()
         self.running = True
 
         while self.running:
             #read serial
-            if self.ser.ser.in_waiting > 0:            
-                self.data=self.ser.ser.readline().decode()
+            if self.ser.ser.in_waiting > 0:
+                temp = self.ser.ser.readline()
+                try:self.data=temp.decode()
+                except:print("decode failed")
                 self.data = self.data.split(',')
 
                 if len(self.data) == self.expectedDat:

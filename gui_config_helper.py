@@ -71,7 +71,8 @@ default_plot = {
             "plot num" : None,
             "color" : "r",
             "linestyle" : "",
-            "buffersize": None
+            "buffersize": None,
+            "displaytime": None
 }
 
 default_range = {
@@ -106,6 +107,9 @@ for i in range(channel_num):
         
         plot = verify_plot_input(plot_num)
         config_dict["data"][channel_name]["plotting"]["plot num"] = plot
+
+        displaytime = verify_int_input("Time to display [seconds]: ")
+        config_dict["data"][channel_name]["plotting"]["displaytime"]=displaytime
 
     range_check = input("Check Range? Y/n: ")
     config_dict["data"][channel_name]["range"] = dict(default_range)
