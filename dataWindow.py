@@ -1,4 +1,4 @@
-import serial
+import json
 
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -7,7 +7,8 @@ import pyqtgraph as pg
 
 import sys
 
-from serialConnection import SerialConnection
+from serialConnection import SerialConnection,serial_frame 
+from configWindow import configWindow
 from fileManagement import saveFile
 from dataManagementThread import dataThread
  
@@ -24,9 +25,9 @@ class MainWindow (QMainWindow):
     def __init__(self,setupW):
         super().__init__()
         self.setupW=setupW
+        self.config_winds = {}
         self.sf = saveFile()
 
-        #TODO Add default values class variables
 
 
     @pyqtSlot()
@@ -34,7 +35,7 @@ class MainWindow (QMainWindow):
   
         self.config=self.setupW.get_config()
         try:
-            self.sc = SerialConnection(self.config["serial_baud_rate"])
+            self.sc = SerialConnection(self.config["serial"])
             col_names = []
             for n in self.config["data"]:
                 col_names.append(n)
@@ -47,8 +48,9 @@ class MainWindow (QMainWindow):
         
             self.initUI()
             self.show()
-        except KeyError:
+        except KeyError as e:
             print("Bad Config: closing app")
+            print(e)
             self.setupW.close()
             self.close()
             
@@ -67,6 +69,9 @@ class MainWindow (QMainWindow):
         self.disconnect_serial_button = QPushButton("Disconnect",self)
         self.disconnect_serial_button.clicked.connect(self.disconnect_Serial)
 
+        self.serial_config_button = QPushButton("Serial Settings",self)
+        self.serial_config_button.clicked.connect(self.show_serial_config)
+
         self.serial_write_label = QLabel("Serial Write")
         self.ser_write = QLineEdit("")
         self.ser_write.textEdited.connect(self.serial_write)
@@ -79,9 +84,11 @@ class MainWindow (QMainWindow):
         self.launch_button.setCheckable(True)
         self.launch_button.clicked.connect(self.data_Collection)
 
+        self.save_config_button = QPushButton("save config to file")
+        self.save_config_button.clicked.connect(self.save_config)
 
         self.plots_list = []
-        for i in range (self.config["plot_num"]):
+        for i in range (self.config["plotting"]["plot_num"]):
             self.plots_list.append(pg.PlotWidget())
             self.plots_list[i].setBackground("w")
         
@@ -92,11 +99,13 @@ class MainWindow (QMainWindow):
         layout.addWidget(self.serial_select)
         layout.addWidget(self.connect_serial_button)
         layout.addWidget(self.disconnect_serial_button)
+        layout.addWidget(self.serial_config_button)
         layout.addWidget(self.serial_write_label)
         layout.addWidget(self.ser_write)
         layout.addWidget(self.set_savefilename)
         layout.addWidget(self.savefilename)
         layout.addWidget(self.launch_button)
+        layout.addWidget(self.save_config_button)
         
         super_layout = QHBoxLayout()
         super_layout.addLayout(layout)
@@ -119,9 +128,9 @@ class MainWindow (QMainWindow):
         #for i,plots in enumerate(self.plots_list):
         #    self.dataThread.attach_plot(self.plot_axis[2*i],self.plot_axis[2*i+1])
             
-
-        self.sc.connect(parity=serial.PARITY_ODD,bytesize = serial.SEVENBITS)
-        self.dataThread.start()
+        self.sc.connect()
+        if not (self.sc.ser is None):
+            self.dataThread.start()
 
     def disconnect_Serial(self):
         self.dataThread.stopSerial()
@@ -130,8 +139,11 @@ class MainWindow (QMainWindow):
     def serial_write(self):
         self.sc.send_char(self.ser_write.text())
         self.ser_write.clear()
-        
     
+    def show_serial_config(self):
+        self.config_winds["serial"] = configWindow(self.config["serial"],frame=serial_frame)
+        self.config_winds["serial"].show()
+
     @pyqtSlot()
     def plotData(self):
         for plot in self.plots_list:plot.clear() 
@@ -160,3 +172,19 @@ class MainWindow (QMainWindow):
             self.dataThread.set_Data(False)
             self.sf.set_active(False)
             #self.dataThread.quit()
+
+    def save_config(self):
+        
+        name = QFileDialog.getSaveFileName(self,"Configuration Save File")
+        if name[0][-5:]==".json":config_path = name[0]
+        else: config_path = name[0]+".json"
+        with open(config_path,'w') as jsonfile:
+            json.dump(self.config,jsonfile,indent=4)
+            
+        
+
+    def closeEvent(self, a0):
+        for wind in self.config_winds.values():
+            wind.close()
+        self.setupW.close()
+        return super().closeEvent(a0)

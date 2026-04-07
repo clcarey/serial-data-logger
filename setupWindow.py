@@ -4,6 +4,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 
+from serialConnection import default_config as serial_default_config
 import sys
 import json
 
@@ -14,11 +15,14 @@ class setupWindow (QMainWindow):
         self.initUI()
 
         self.config = {
-            "serial_baud_rate" : 9600,
-            "channel_num" : 0,
-            "plot_num" : 0,
+            "serial" : serial_default_config.copy(),
+            "plotting":{
+                "plot num": 1
+            },
+            "savefile": "./data/filename",
             "data" : {}
             }
+        
         self.config_flag = False
         
     def initUI(self):    
@@ -27,20 +31,27 @@ class setupWindow (QMainWindow):
         self.select_config_button = QPushButton("Select Config File",self)
         self.select_config_button.clicked.connect(self.openFileDialog)
         
+        self.DEV_MESSAGE = QLabel("UNDER MAINTENENCE")
+
         self.serial_set_label = QLabel("Enter Serial Baud Rate:")
         self.serial_line = QLineEdit()
+        #self.serial_line.isEnabled(False)
         
         self.data_num_label = QLabel("Enter Data number:")
         self.data_num_line = QLineEdit()
+        #self.data_num_line.isEnabled(False)
 
         self.data_names_label = QLabel("Comma Separated Data Names:")
         self.data_names_line = QLineEdit()
+        #self.data_names_line.isEnabled(False)
 
         self.graph_num_label = QLabel("Enter graph number:")
         self.graph_num_line = QLineEdit()
+        #self.graph_num_line.isEnabled(False)
 
         self.graph_axis_label = QLabel("Enter graph axis:")
         self.graph_axis_line = QLineEdit("xaxis1,yaxis1,xaxis2,yetc")
+        #self.graph_axis_line.isEnabled(False)
 
         self.launch_button = QPushButton("Manual entry under dev use file")
         self.launch_button.clicked.connect(self.launch_data)
@@ -49,6 +60,7 @@ class setupWindow (QMainWindow):
         #create layout for Config dialog
         layout = QVBoxLayout()
         layout.addWidget(self.select_config_button)
+        layout.addWidget(self.DEV_MESSAGE)
         layout.addWidget(self.serial_set_label)
         layout.addWidget(self.serial_line)
         layout.addWidget(self.data_num_label)
@@ -72,7 +84,7 @@ class setupWindow (QMainWindow):
                 self.config = json.load(json_file)
             self.config_flag = True
         except:
-            print("Bad Config Try Again")
+            print("Couldn't read. json expected. Try Again")
 
     def openFileDialog(self):
         file_dialog = QFileDialog(self)
