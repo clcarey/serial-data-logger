@@ -1,102 +1,214 @@
-import serial
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from functools import partial
 
-import sys
-import json
+class configWindow(QWidget):
+    update_config = pyqtSignal()
 
-class configWindow (QMainWindow):
-    readySignal=pyqtSignal()
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-
-        self.config = {
-            "serial_baud_rate" : 9600,
-            "channel_num" : 0,
-            "plot_num" : 0,
-            "data" : {}
-            }
-        self.config_flag = False
-        
-    def initUI(self):    
-        self.setWindowTitle("Config")
-        
-        self.select_config_button = QPushButton("Select Config File",self)
-        self.select_config_button.clicked.connect(self.openFileDialog)
-        
-        self.serial_set_label = QLabel("Enter Serial Baud Rate:")
-        self.serial_line = QLineEdit()
-        
-        self.data_num_label = QLabel("Enter Data number:")
-        self.data_num_line = QLineEdit()
-
-        self.data_names_label = QLabel("Comma Separated Data Names:")
-        self.data_names_line = QLineEdit()
-
-        self.graph_num_label = QLabel("Enter graph number:")
-        self.graph_num_line = QLineEdit()
-
-        self.graph_axis_label = QLabel("Enter graph axis:")
-        self.graph_axis_line = QLineEdit("xaxis1,yaxis1,xaxis2,yetc")
-
-        self.launch_button = QPushButton("Manual entry under dev use file")
-        self.launch_button.clicked.connect(self.launch_data)
-        self.launch_button.setEnabled(False)
-        
-        #create layout for Config dialog
-        layout = QVBoxLayout()
-        layout.addWidget(self.select_config_button)
-        layout.addWidget(self.serial_set_label)
-        layout.addWidget(self.serial_line)
-        layout.addWidget(self.data_num_label)
-        layout.addWidget(self.data_num_line)
-        layout.addWidget(self.data_names_label)
-        layout.addWidget(self.data_names_line)
-        layout.addWidget(self.graph_num_label)
-        layout.addWidget(self.graph_num_line)
-        layout.addWidget(self.graph_axis_label)
-        layout.addWidget(self.graph_axis_line)
-        layout.addWidget(self.launch_button)
-
-
-        widget = QWidget()
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
-
-    def read_config_file(self,file):
+    @classmethod
+    def isFrame(cls,frame):
         try:
-            with open(file) as json_file:
-                self.config = json.load(json_file)
-            self.config_flag = True
-        except:
-            print("Bad Config Try Again")
+            for key in frame:
+                if isinstance(frame[key],dict):
+                    if not cls.isFrame(frame[key]): return False
+                elif isinstance(frame[key],str): pass
+                elif isinstance(frame[key],list):
+                    for n in frame[key]:
+                        if not isinstance(n,str):return False
+                else: return False
+        except:return False
+        return True
+    
+    
+    
+    
+    def __init__(self,config,frame=None):
+        super().__init__()
 
-    def openFileDialog(self):
-        file_dialog = QFileDialog(self)
-        file_dialog.setWindowTitle("Open File")
-        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        file_dialog.setViewMode(QFileDialog.ViewMode.Detail)
+        self.config = config
+        self.frame = frame
+        self.widgets = {}
+        self.windows = {}
+        if self.frame is None:
+            layout=self.launchFromDefault()
+        elif self.isFrame(self.frame):
+            layout=self.launchFromFrame()
+        else:
+            raise UserWarning("Frame of incorrect shape proceding with Default")
 
-        if file_dialog.exec():
-            selected_files = file_dialog.selectedFiles()
-            self.read_config_file(selected_files[0])
-            
-        if self.config_flag:
-            self.readySignal.emit()
-            self.hide()
-            
-    def get_config(self):
-        return self.config
+        self.setLayout(layout)
+    
 
-    def launch_data(self):
-        self.serial_baud_rate = int(self.serial_line.text())        
-        self.channel_num = int(self.data_num_line.text())
-        self.plot_num = int(self.graph_num_line.text())
-        self.data_title = self.data_names_line.text()
-        self.plot_axis = self.graph_axis_line.text()
-        self.readySignal.emit()    
-        self.hide()
 
+    def launchFromFrame(self,config = None):
+        
+        if config is None: config = self.config
+        layout = QVBoxLayout()
+        for key in self.frame:
+            if isinstance(self.frame[key],dict):
+                layout.addLayout(self.dictWidget(key))
+
+            elif isinstance(self.frame[key],list):
+                layout.addLayout(self.comboWidget(key,self.frame[key],config[key]))
+            else:
+                match self.frame[key]:
+                    case "bool":
+                        layout.addWidget(self.boolWidget(key,config[key]))
+                    case "int":
+                        layout.addLayout(self.intWidget(key,config[key]))
+                    case "float":
+                        layout.addLayout(self.intWidget(key,config[key]))
+                    case "str":
+                        layout.addLayout(self.strWidget(key,config[key]))
+
+                    case _:
+                        pass
+        return layout
+
+
+
+    def launchFromDefault(self,config = None):
+        if config is None: config = self.config
+        layout = QVBoxLayout()
+        for key in config:
+            if isinstance(config[key],dict):
+                layout.addLayout(self.dictWidget(key))
+            elif isinstance(config[key],bool):layout.addWidget(self.boolWidget(key,config[key]))
+            elif isinstance(config[key],int):layout.addLayout(self.intWidget(key,config[key]))
+            elif isinstance(config[key],float):layout.addLayout(self.floatWidget(key,config[key]))
+            elif isinstance(config[key],str):layout.addLayout(self.strWidget(key,config[key]))
+            else:
+                layout.addLayout(self.staticWidget(key,config[key]))
+        return layout
+    
+
+    def boolWidget(self,title,value):
+        label = QCheckBox(title)
+        label.setChecked(value)
+        label.stateChanged.connect(partial(self.save_config,title,"bool"))
+        self.widgets[title]=label
+
+        return label
+
+    def strWidget(self,title,value):
+        
+        label = QLabel(title)
+        edit = QLineEdit(value)
+        edit.editingFinished.connect(partial(self.save_config,title,"str"))
+        self.widgets[title]=edit
+
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(edit)
+        return layout
+
+    def intWidget(self,title,value):
+        label = QLabel(title)
+        edit = QLineEdit(str(value))
+        edit.editingFinished.connect(partial(self.save_config,title,"int"))
+        self.widgets[title]=edit
+
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(edit)
+        return layout
+
+    def floatWidget(self,title,value):
+        label = QLabel(title)
+        edit = QLineEdit(str(value))
+        edit.editingFinished.connect(partial(self.save_config,title,"float"))
+        self.widgets[title]=edit
+
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(edit)
+        return layout
+
+    def comboWidget(self,title,options,value):
+        
+        label = QLabel(title)
+        edit = QComboBox()
+        edit.addItems(options)
+        
+        try:
+            value = options.index(value)
+            edit.setCurrentIndex(value)
+        except ValueError:
+            pass
+        
+        edit.currentTextChanged.connect(partial(self.save_config,title,"combo"))
+        self.widgets[title]=edit
+
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(edit)
+        return layout
+
+    def dictWidget(self,title):
+        label = QLabel(title)
+        button = QPushButton("config")
+        button.pressed.connect(partial(self.subDictDisplay,title))
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(button)
+        return layout
+
+    def subDictDisplay(self,title):
+        if title in self.windows:self.windows[title].close()
+        if self.frame is None:
+            self.windows[title]=configWindow(self.config[title])
+        elif self.isFrame(self.frame):
+            self.windows[title]=configWindow(self.config[title],frame=self.frame[title])
+        
+        self.windows[title].show()
+    
+    def staticWidget(self,title,value):
+        label = QLabel(title)
+        edit = QLineEdit(str(value))
+        edit.setEnabled(False)
+
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(edit)
+        return layout
+    
+    def save_config(self,key,w_type):
+        match w_type:
+            case "bool": 
+                value=self.widgets[key].checkState()
+                if value == Qt.CheckState.Checked: value = True
+                else: value = False
+            case "str":
+                value=self.widgets[key].text()
+            case "int":
+                value=self.widgets[key].text()
+                try: value = int(value)
+                except:
+                    print("Can't cast to int. Reverting")
+                    value = self.config[key]
+                    self.widgets[key].setText(str(value))
+
+            case "float": 
+                value=self.widgets[key].text()
+                try: value = float(value)
+                except:
+                    print("Can't cast to float. Reverting")
+                    value = self.config[key]
+                    self.widgets[key].setText(str(value))
+            case "combo":
+                value=self.widgets[key].currentText()
+            case _:
+                value = self.config[key]
+        
+        self.config[key]=value
+        
+        self.config[key]
+
+    def closeEvent(self, a0):
+        for wind in self.windows.values():
+            wind.close()
+        self.update_config.emit()
+        return super().closeEvent(a0)
+    

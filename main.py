@@ -1,25 +1,24 @@
 import serial
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 
 import sys
 
-from configWindow import configWindow
-from serialConnection import SerialConnection
+from setupWindow import setupWindow
 from dataWindow import MainWindow
 from wakepy import keep
 
 
 app = QApplication(sys.argv)
 
-configWind = configWindow()
-dataWind = MainWindow(configWind)
+setupWind = setupWindow()
+dataWind = MainWindow(setupWind)
 
-configWind.readySignal.connect(dataWind.recieveConfig)
+setupWind.readySignal.connect(dataWind.recieveConfig)
 
-configWind.show()
+setupWind.show()
 with keep.presenting():
 #dataWind.show()
-    app.exec_()
+    app.exec()

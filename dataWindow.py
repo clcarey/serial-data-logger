@@ -1,13 +1,12 @@
 import serial
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 import pyqtgraph as pg
 
 import sys
 
-from configWindow import configWindow
 from serialConnection import SerialConnection
 from fileManagement import saveFile
 from dataManagementThread import dataThread
@@ -22,9 +21,9 @@ class ComboBox(QComboBox):
 
 class MainWindow (QMainWindow):
 
-    def __init__(self,configW):
+    def __init__(self,setupW):
         super().__init__()
-        self.configW=configW
+        self.setupW=setupW
         self.sf = saveFile()
 
         #TODO Add default values class variables
@@ -32,23 +31,27 @@ class MainWindow (QMainWindow):
 
     @pyqtSlot()
     def recieveConfig(self):
-        self.config=self.configW.get_config()
+  
+        self.config=self.setupW.get_config()
+        try:
+            self.sc = SerialConnection(self.config["serial_baud_rate"])
+            col_names = []
+            for n in self.config["data"]:
+                col_names.append(n)
+                if self.config["data"][n]["parse"]["active"]:
+                    col_names.append(n + "- parsed")
+            self.sf.set_columnNames(col_names)
 
-        self.sc = SerialConnection(self.config["serial_baud_rate"])
-
-        col_names = []
-        for n in self.config["data"]:
-            col_names.append(n)
-            if self.config["data"][n]["parse"]["active"]:
-                col_names.append(n + "- parsed")
-        self.sf.set_columnNames(col_names)
-
-        self.dataThread = dataThread(self.sc,self.sf,self.config["data"])
-        self.dataThread.new_dat.connect(self.plotData)
+            self.dataThread = dataThread(self.sc,self.sf,self.config["data"])
+            self.dataThread.new_dat.connect(self.plotData)
         
-        self.initUI()
-        self.show()
-        
+            self.initUI()
+            self.show()
+        except KeyError:
+            print("Bad Config: closing app")
+            self.setupW.close()
+            self.close()
+            
     def initUI(self):
         
         self.setWindowTitle("Data Logger")

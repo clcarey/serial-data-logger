@@ -157,8 +157,18 @@ class DataChannel():
         return value
 
     def parse2(self,value):
-        print("Parser not yet integrated")
-        return value
+        try:
+            parsed_value = value.replace(" ","")
+        except:
+            self._error |= Errors.BAD_PARSE.value
+            return value
+        try:
+            temp = parsed_value.split("g")
+            if len(temp) == 1: raise Exception("no starting parse found")
+            parsed_value = float(temp[0])
+        except:
+            self._error |= Errors.BAD_PARSE.value
+        return parsed_value
 
     def parse3(self,value):
         print("Parser not yet integrated")
