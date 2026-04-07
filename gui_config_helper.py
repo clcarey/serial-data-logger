@@ -87,10 +87,10 @@ if bool_prompt("See advanced serial settings"):
     
       
 channel_num = verify_int_input("Number of Data Channels: ")
-config_dict["channel_num"] = channel_num
+config_dict["channel num"] = channel_num
 
 plot_num = verify_int_input("Number of Plots: ")
-config_dict["plotting"]["plot_num"] = plot_num
+config_dict["plotting"]["plot num"] = plot_num
 
 config_dict["savefile"] = savefilename
 

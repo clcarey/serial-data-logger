@@ -88,7 +88,7 @@ class MainWindow (QMainWindow):
         self.save_config_button.clicked.connect(self.save_config)
 
         self.plots_list = []
-        for i in range (self.config["plotting"]["plot_num"]):
+        for i in range (self.config["plotting"]["plot num"]):
             self.plots_list.append(pg.PlotWidget())
             self.plots_list[i].setBackground("w")
         

@@ -14,6 +14,7 @@ class configWindow(QWidget):
                 if isinstance(frame[key],dict):
                     if not cls.isFrame(frame[key]): return False
                 elif isinstance(frame[key],str): pass
+                elif frame[key] is None: pass
                 elif isinstance(frame[key],list):
                     for n in frame[key]:
                         if not isinstance(n,str):return False
@@ -36,7 +37,8 @@ class configWindow(QWidget):
         elif self.isFrame(self.frame):
             layout=self.launchFromFrame()
         else:
-            raise UserWarning("Frame of incorrect shape proceding with Default")
+            print("Frame of incorrect shape proceding with Default")
+            layout=self.launchFromDefault()
 
         self.setLayout(layout)
     
@@ -62,9 +64,8 @@ class configWindow(QWidget):
                         layout.addLayout(self.intWidget(key,config[key]))
                     case "str":
                         layout.addLayout(self.strWidget(key,config[key]))
-
                     case _:
-                        pass
+                        layout.addLayout(self.staticWidget(key,config[key]))
         return layout
 
 

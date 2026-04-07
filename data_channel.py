@@ -17,13 +17,30 @@ class ParseType(Enum):
     PARSE_5 = 5
 
 reasonable_buffersize = 3600
+"""
+colorRef = {"Blue":"b",
+                "Cyan" : "c",
+                "Green" : "g",
+                "Black" : "k",
+                "Magenta" : "m",
+                "Red" : "r",
+                "Yellow" : "y"
+    }
 
+styleRef = { "Solid Line" : Qt.PenStyle.SolidLine,
+                "Dash Line" : Qt.PenStyle.DashLine,
+                "Dot Line" : Qt.PenStyle.DotLine,
+                "Dash Dot Line" : Qt.PenStyle.DashDotLine,
+                "Dash Dot Dot Line" : Qt.PenStyle.DashDotDotLine
+    }
+"""
 default_config = { 
         "plotting": {
             "active": False,
-            "name" : "",
-            "color" : "",
-            "linestyle" : "",
+            "name" : None,
+            "plot num":None,
+            "color" : None,
+            "linestyle" : None,
             "buffersize": 50,
             "displaytime": 3600 #1 hr
             },
@@ -38,7 +55,29 @@ default_config = {
             "start": None,
             "end" : None
             }
-        }   
+        }
+data_frame = { 
+        "plotting": {
+            "active": "bool",
+            "name" : "str",
+            "plot num":[],
+            "color" : ["Blue","Cyan","Green","Black","Magenta","Red","Yellow"],
+            "linestyle" : ["Solid Line","Dash Line","Dot Line","Dash Dot Line","Dash Dot Dot Line"],
+            "buffersize": "int",
+            "displaytime": "int"
+            },
+        "range" : {
+            "active": "bool",
+            "high": "float",
+            "low" : "float"
+            },
+        "parse" : {
+            "active":"bool",
+            "type" : ["Scale Parse kg","Strip \\n","Scale Parse g","unallocated","unallocated","unallocated"],
+            "start": None,
+            "end" : None
+            }
+        }
 
 
 class DataChannel():
