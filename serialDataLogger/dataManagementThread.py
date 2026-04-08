@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 import pyqtgraph as pg
 
-from data_channel import DataChannel
+from .data_channel import DataChannel
 import sys
 
 

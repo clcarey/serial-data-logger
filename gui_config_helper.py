@@ -1,5 +1,5 @@
 import json
-from serialConnection import default_config as serial_default_config
+from serialDataLogger.serialConnection import default_config as serial_default_config
 
 def verify_int_input(prompt_str):
     v_flag = False

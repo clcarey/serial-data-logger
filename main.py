@@ -6,8 +6,7 @@ from PyQt6.QtCore import *
 
 import sys
 
-from setupWindow import setupWindow
-from dataWindow import MainWindow
+from serialDataLogger import setupWindow,MainWindow
 from wakepy import keep
 
 

@@ -5,11 +5,11 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 
-from configWindow import configWindow
-from serialConnection import default_config as serial_default_config
-from data_channel import default_config as data_default_config
-from serialConnection import serial_frame
-from data_channel import data_frame
+from .configWindow import configWindow
+from .serialConnection import default_config as serial_default_config
+from .data_channel import default_config as data_default_config
+from .serialConnection import serial_frame
+from .data_channel import data_frame
 
 import sys
 import json

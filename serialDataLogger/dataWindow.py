@@ -7,10 +7,10 @@ import pyqtgraph as pg
 
 import sys
 
-from serialConnection import SerialConnection,serial_frame 
-from configWindow import configWindow
-from fileManagement import saveFile
-from dataManagementThread import dataThread
+from .serialConnection import SerialConnection,serial_frame 
+from .configWindow import configWindow
+from .fileManagement import saveFile
+from .dataManagementThread import dataThread
  
 class ComboBox(QComboBox):
     popupAboutToBeShown = pyqtSignal()
