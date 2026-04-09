@@ -18,6 +18,10 @@ dataWind = MainWindow(setupWind)
 setupWind.readySignal.connect(dataWind.recieveConfig)
 
 setupWind.show()
+with open("resources/stylesheet.qss", "r") as f:
+        _style = f.read()
+        app.setStyleSheet(_style)
+
 with keep.presenting():
 #dataWind.show()
     app.exec()

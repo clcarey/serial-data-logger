@@ -45,6 +45,7 @@ class MainWindow (QMainWindow):
 
             self.dataThread = dataThread(self.sc,self.sf,self.config["data"])
             self.dataThread.new_dat.connect(self.plotData)
+            self.dataThread.finished.connect(self.serial_disconnected)
         
             self.initUI()
             self.show()
@@ -68,6 +69,7 @@ class MainWindow (QMainWindow):
         
         self.disconnect_serial_button = QPushButton("Disconnect",self)
         self.disconnect_serial_button.clicked.connect(self.disconnect_Serial)
+        self.disconnect_serial_button.setEnabled(False)
 
         self.serial_config_button = QPushButton("Serial Settings",self)
         self.serial_config_button.clicked.connect(self.show_serial_config)
@@ -83,6 +85,7 @@ class MainWindow (QMainWindow):
         self.launch_button = QPushButton("Begin Data Collection")
         self.launch_button.setCheckable(True)
         self.launch_button.clicked.connect(self.data_Collection)
+        self.launch_button.setEnabled(False)
 
         self.save_config_button = QPushButton("save config to file")
         self.save_config_button.clicked.connect(self.save_config)
@@ -132,10 +135,24 @@ class MainWindow (QMainWindow):
         if not (self.sc.ser is None):
             self.dataThread.start()
 
+            self.launch_button.setEnabled(True)
+            self.disconnect_serial_button.setEnabled(True)
+            self.serial_config_button.setEnabled(False)
+            self.connect_serial_button.setEnabled(False)
+
     def disconnect_Serial(self):
         self.dataThread.stopSerial()
         self.sc.disconnect()
-        
+        self.serial_disconnected()
+
+    def serial_disconnected(self):
+        self.disconnect_serial_button.setEnabled(False)
+        self.connect_serial_button.setEnabled(True)
+        self.serial_config_button.setEnabled(True)
+        self.launch_button.setChecked(False)
+        self.data_Collection(False)
+        self.launch_button.setEnabled(False)
+
     def serial_write(self):
         self.sc.send_char(self.ser_write.text())
         self.ser_write.clear()
