@@ -74,6 +74,9 @@ class MainWindow (QMainWindow):
         self.serial_config_button = QPushButton("Serial Settings",self)
         self.serial_config_button.clicked.connect(self.show_serial_config)
 
+        self.clear_fig_button = QPushButton("Clear Graph")
+        self.clear_fig_button.clicked.connect(self.clear_figures)
+
         self.serial_write_label = QLabel("Serial Write")
         self.ser_write = QLineEdit("")
         self.ser_write.textEdited.connect(self.serial_write)
@@ -103,6 +106,7 @@ class MainWindow (QMainWindow):
         layout.addWidget(self.connect_serial_button)
         layout.addWidget(self.disconnect_serial_button)
         layout.addWidget(self.serial_config_button)
+        layout.addWidget(self.clear_fig_button)
         layout.addWidget(self.serial_write_label)
         layout.addWidget(self.ser_write)
         layout.addWidget(self.set_savefilename)
@@ -152,6 +156,11 @@ class MainWindow (QMainWindow):
         self.launch_button.setChecked(False)
         self.data_Collection(False)
         self.launch_button.setEnabled(False)
+
+    def clear_figures(self):
+        for channel in self.dataThread.data_channels:
+            channel.clear_buffer()
+            channel.reset_x_start()
 
     def serial_write(self):
         self.sc.send_char(self.ser_write.text())

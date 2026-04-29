@@ -124,11 +124,12 @@ class DataChannel():
         self.buffer=[]
         self.x_ref = []
         self._error = 0b0
+        self.x_start = time.time()
 
 
-    def new(self,value,x_new= None,x_start = time.time()):
-        
-        if x_new is None:x_new = time.time() - x_start
+    def new(self,value,x_new= None):
+    
+        if x_new is None:x_new = time.time() - self.x_start
         self.last_read = value
         temp = self.last_read
         if self.config["parse"]["active"]:
@@ -294,6 +295,9 @@ class DataChannel():
         self.buffer = []
         self.x_ref = []
         self.buffer_marker = 0
+    
+    def reset_x_start(self):
+        self.x_start = time.time()
 """
         def new(self,value):
             self.last_read = value
