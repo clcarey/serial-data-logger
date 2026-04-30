@@ -38,7 +38,7 @@ default_config = {
         "plotting": {
             "active": False,
             "name" : None,
-            "plot num":None,
+            "plot num":1,
             "color" : None,
             "linestyle" : None,
             "buffersize": 50,

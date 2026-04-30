@@ -82,20 +82,28 @@ class setupWindow (QMainWindow):
         self.setCentralWidget(widget)
 
     def show_serial(self):
+        if "serial" in self.winds:
+            self.winds["serial"].close()
         self.winds["serial"]=configWindow(self.config["serial"],frame=serial_frame)
         self.winds["serial"].show()
 
     def show_data(self):
-        self.config["data"]=self.generate_data_config()
+        if "data" in self.winds:
+            self.winds["data"].close()
+        self.generate_data_config()
         frame = self.generate_data_frame()
         self.winds["data"]=configWindow(self.config["data"],frame=frame)
         self.winds["data"].show()
 
     def generate_data_config(self):
-        data_dict = {}
-        for channel in range(self.config["channel num"]):
-            data_dict["Channel "+str(channel)]=copy.deepcopy(data_default_config)
-        return data_dict
+        if len(self.config["data"])>self.config["channel num"]:
+            for channel in range(self.config["channel num"],len(self.config["data"])):
+                del self.config["data"]["Channel "+str(channel)]
+        elif len(self.config["data"])<self.config["channel num"]:
+            for channel in range(len(self.config["data"]),self.config["channel num"]):
+                self.config["data"]["Channel "+str(channel)]=copy.deepcopy(data_default_config)
+        else:pass
+
 
     def generate_data_frame(self):
         frame_dict = {}
@@ -154,6 +162,13 @@ class setupWindow (QMainWindow):
         return self.config
 
     def launch_data(self):
+        self.generate_data_config()
         self.readySignal.emit()    
         self.hide()
+    
+    def closeEvent(self, a0):
+        for wind in self.winds.values():
+            wind.close()
+        return super().closeEvent(a0)
+    
 

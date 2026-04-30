@@ -12,6 +12,26 @@ from .configWindow import configWindow
 from .fileManagement import saveFile
 from .dataManagementThread import dataThread
  
+
+colorRef = {"Blue":"b",
+                "Cyan" : "c",
+                "Green" : "g",
+                "Black" : "k",
+                "Magenta" : "m",
+                "Red" : "r",
+                "Yellow" : "y",
+                None : "b"
+    }
+styleRef = { "Solid Line" : Qt.PenStyle.SolidLine,
+                "Dash Line" : Qt.PenStyle.DashLine,
+                "Dot Line" : Qt.PenStyle.DotLine,
+                "Dash Dot Line" : Qt.PenStyle.DashDotLine,
+                "Dash Dot Dot Line" : Qt.PenStyle.DashDotDotLine,
+                None : Qt.PenStyle.SolidLine
+    }
+
+
+
 class ComboBox(QComboBox):
     popupAboutToBeShown = pyqtSignal()
 
@@ -172,13 +192,24 @@ class MainWindow (QMainWindow):
 
     @pyqtSlot()
     def plotData(self):
+        global colorRef
+        global styleRef
+        
         for plot in self.plots_list:plot.clear() 
         for channel in self.dataThread.data_channels:
             if channel.config["plotting"]["active"]:
                 #print(channel.buffer)
+                
+                color = colorRef.get(channel.config["plotting"]["color"],"b")
+                style = styleRef.get(channel.config["plotting"]["linestyle"],Qt.PenStyle.SolidLine)
+                pen = pg.mkPen(color=color,style=style)
                 try:
-                    self.plots_list[channel.config["plotting"]["plot num"]-1].plot(channel.x_ref,channel.buffer,label = channel.config["plotting"]["name"])
-                except:
+                    self.plots_list[int(channel.config["plotting"]["plot num"])-1].plot(channel.x_ref,
+                                                                                   channel.buffer,
+                                                                                   label = channel.config["plotting"]["name"],
+                                                                                   pen=pen)
+                except Exception as e:
+                    print(e)
                     channel.clear_buffer()
                     print("Plotting error clearing buffer")
 
